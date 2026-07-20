@@ -1,0 +1,3 @@
+tokenizer:
+  strategy: atomwise
+  strict_regex: false

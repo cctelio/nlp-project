@@ -1,0 +1,3 @@
+tokenizer:
+  strategy: default
+  strict_regex: false

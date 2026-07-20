@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+wandb/
+/data/
+/assignments/data/
+/assignments/results/
+notebooks/.ipynb_checkpoints/
+.DS_Store
+
+# Model, training, and dataset artifacts. Keep these in project storage,
+# Hugging Face/W&B, or local result directories rather than Git.
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.arrow
+*.sqlite3
+*.pickle
+*.pkl
+
+# Legacy standalone tokenizer experiment outputs.
+project/results/*
+!project/results/.gitkeep
+project/legacy/mol_tokenizer_experiments/data/
+project/legacy/mol_tokenizer_experiments/outputs/

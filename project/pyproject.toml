@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smollm-chemical-tokenization"
+version = "0.1.0"
+description = "Tokenization experiments for SmolLM-135M on natural-language-to-SMILES instruction tuning."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "datasets>=2.18.0",
+  "huggingface-hub>=0.23.0",
+  "numpy>=1.24.0",
+  "pandas>=2.0.0",
+  "pyyaml>=6.0.0",
+  "rdkit>=2023.9.0",
+  "selfies>=2.1.0",
+  "torch>=2.1.0",
+  "transformers>=4.40.0",
+  "trl>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "ruff>=0.5.0"]
+tracking = ["wandb>=0.16.0"]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]

@@ -1,0 +1,81 @@
+seed: 42
+dry_run: false
+dry_run_train_samples: 32
+dry_run_eval_samples: 16
+
+model:
+  model_id: HuggingFaceTB/SmolLM-135M
+  revision:
+  torch_dtype: bfloat16
+  attn_implementation: auto
+  device_map: local_rank
+
+data:
+  dataset_name: zjunlp/Mol-Instructions
+  archive_filename: data/Molecule-oriented_Instructions.zip
+  raw_path:
+  cache_dir: results/cache
+  processed_dir: results/data/mol_instructions_description_guided
+  sft_dir: results/data/sft
+  sft_file_format: csv
+  sft_hpo_dir: results/data/sft_hpo
+  use_precomputed_sft: false
+  precompute_sft_per_trial: false
+  train_path: results/data/mol_instructions_description_guided/train.csv
+  validation_path: results/data/mol_instructions_description_guided/validation.csv
+  test_path: results/data/mol_instructions_description_guided/test.csv
+  task_filter: description-guided molecule design
+  train_fraction: 0.8
+  validation_fraction: 0.1
+  output_format: auto
+  canonicalize_smiles: true
+  max_samples:
+  prompt_template: "### Instruction:\n{instruction}\n\n### Response:\n"
+
+tokenizer:
+  strategy: default
+  strict_regex: false
+
+training:
+  output_root: results/runs
+  run_name:
+  resume_from_checkpoint:
+  num_train_epochs: 3
+  max_steps: -1
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 8
+  learning_rate: 0.00002
+  warmup_ratio: 0.05
+  weight_decay: 0.01
+  max_length: 512
+  logging_steps: 10
+  eval_strategy: steps
+  eval_steps: 250
+  save_strategy: steps
+  save_steps: 250
+  save_total_limit: 2
+  load_best_model_at_end: true
+  metric_for_best_model: eval_loss
+  greater_is_better: false
+  bf16: true
+  fp16: false
+  packing: false
+  gradient_checkpointing: true
+  dataloader_num_workers: 0
+  max_grad_norm: 1.0
+
+generation:
+  batch_size: 16
+  max_new_tokens: 160
+  do_sample: false
+  temperature: 1.0
+  top_p: 0.95
+
+evaluation:
+  run_after_training: true
+  max_validation_examples: 256
+
+logging:
+  disable_wandb: true
+  wandb_project: SmolLM-chemical-tokenization

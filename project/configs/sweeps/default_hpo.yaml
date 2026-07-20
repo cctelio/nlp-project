@@ -1,0 +1,21 @@
+method: grid
+metric:
+  name: validation/tanimoto_similarity_mean
+  goal: maximize
+tie_breakers:
+  - name: validation/validity
+    goal: maximize
+  - name: validation/canonical_exact_match_accuracy
+    goal: maximize
+  - name: eval_loss
+    goal: minimize
+output_path: results/hpo/default_hpo_results.json
+parameters:
+  training.learning_rate:
+    values: [0.00001, 0.00002, 0.00005]
+  training.num_train_epochs:
+    values: [2, 3]
+  training.warmup_ratio:
+    values: [0.03, 0.05]
+  training.weight_decay:
+    values: [0.0, 0.01]

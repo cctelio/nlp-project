@@ -1,0 +1,5 @@
+tokenizer:
+  strategy: smilespe
+  strict_regex: false
+  vocab_size: 500
+  min_frequency: 5
