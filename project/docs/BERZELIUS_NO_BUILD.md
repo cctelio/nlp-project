@@ -57,11 +57,17 @@ apptainer pull \
 
 ## 4. Create a Project-Storage Virtualenv Inside the Image
 
+Remove the old venv if it was created before this note. The first version could let `pip` install another `torch` inside the venv, which caused a Triton compiler failure during training.
+
+```bash
+rm -rf /proj/berzelius-2026-62/users/x_telcr/venvs/smollm
+```
+
 ```bash
 apptainer exec \
   --bind /proj/berzelius-2026-62/users/x_telcr:/work \
   /proj/berzelius-2026-62/users/x_telcr/containers/pytorch-2.4.1-cuda12.4.sif \
-  bash -lc "python -m venv /work/venvs/smollm && source /work/venvs/smollm/bin/activate && python -m pip install --upgrade pip setuptools wheel"
+  bash -lc "python -m venv --system-site-packages /work/venvs/smollm && source /work/venvs/smollm/bin/activate && python -m pip install --upgrade pip setuptools wheel"
 ```
 
 Install only what is needed for training from prebuilt CSVs and W&B. RDKit and SELFIES are intentionally omitted for the first smoke path.
@@ -75,11 +81,22 @@ apptainer exec \
     'huggingface-hub>=0.23.0' \
     'pandas>=2.0.0' \
     'pyyaml>=6.0.0' \
-    'transformers>=4.40.0' \
-    'trl>=0.9.0' \
-    'accelerate>=0.30.0' \
+    'transformers>=4.40.0,<4.47.0' \
+    'trl>=0.9.0,<0.13.0' \
+    'accelerate>=0.30.0,<1.0.0' \
     'wandb>=0.16.0'"
 ```
+
+Confirm that Python is using the container's PyTorch, not a venv-installed PyTorch:
+
+```bash
+apptainer exec \
+  --bind /proj/berzelius-2026-62/users/x_telcr:/work \
+  /proj/berzelius-2026-62/users/x_telcr/containers/pytorch-2.4.1-cuda12.4.sif \
+  bash -lc "source /work/venvs/smollm/bin/activate && python -c 'import torch; print(torch.__version__); print(torch.__file__)'"
+```
+
+The path should point inside the container's Conda environment, not `/work/venvs/smollm/...`.
 
 ## 5. CPU Import Test
 
@@ -131,3 +148,7 @@ It does not test:
 - Real chemistry metrics.
 
 Those should come after this infrastructure test passes.
+
+## If You Saw `Failed to find C compiler`
+
+That error came from Triton in a newer PyTorch stack installed inside the venv. Recreate the venv with `--system-site-packages` as shown above so it reuses the PyTorch bundled in the pulled image.

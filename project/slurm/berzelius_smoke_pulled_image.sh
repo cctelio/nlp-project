@@ -17,21 +17,24 @@ mkdir -p \
   "$PROJECT_BASE/hf_cache" \
   "$PROJECT_BASE/hf_datasets_cache" \
   "$PROJECT_BASE/results/smoke_runs" \
+  "$PROJECT_BASE/triton_cache" \
   "$PROJECT_BASE/wandb" \
   "$PROJECT_BASE/wandb_cache"
 
 cd "$PROJECT_DIR"
 
+COMMON_ENV="export HF_HOME=/work/hf_cache; export HF_DATASETS_CACHE=/work/hf_datasets_cache; export WANDB_DIR=/work/wandb; export WANDB_CACHE_DIR=/work/wandb_cache; export TRITON_CACHE_DIR=/work/triton_cache; export TOKENIZERS_PARALLELISM=false"
+
 apptainer exec --nv \
   --bind "$PROJECT_BASE:/work" \
   "$IMAGE_PATH" \
-  bash -lc "source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/make_tiny_smoke_data.py \
+  bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/make_tiny_smoke_data.py \
     --output_dir /work/results/data/tiny_smoke"
 
 apptainer exec --nv \
   --bind "$PROJECT_BASE:/work" \
   "$IMAGE_PATH" \
-  bash -lc "source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/train.py \
+  bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/train.py \
     --config configs/default.yaml \
     --tokenizer_config configs/tokenizers/atomwise.yaml \
     --set dry_run=true \
