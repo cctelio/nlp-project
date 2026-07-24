@@ -6,6 +6,7 @@ If you have not tested the project yet, start with [docs/LOW_COMPUTE_RUNBOOK.md]
 
 Cluster guides:
 
+- [docs/BERZELIUS_NO_BUILD.md](docs/BERZELIUS_NO_BUILD.md)
 - [docs/BERZELIUS_CONTAINER.md](docs/BERZELIUS_CONTAINER.md)
 - [docs/ARRHENIUS_CONTAINER.md](docs/ARRHENIUS_CONTAINER.md)
 

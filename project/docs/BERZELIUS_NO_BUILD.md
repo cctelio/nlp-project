@@ -1,0 +1,133 @@
+# Berzelius No-Build Smoke Path
+
+Use this path first when custom Apptainer builds are too slow or when project storage is near the file quota.
+
+It follows the Berzelius Apptainer guide's simpler pattern:
+
+```text
+apptainer pull <image>.sif docker://pytorch/pytorch:<tag>
+apptainer exec --nv <image>.sif ...
+```
+
+Instead of modifying the image, install this project's extra Python packages into a virtual environment stored in project storage.
+
+## Assumptions
+
+These commands use your current Berzelius values:
+
+```text
+Project storage: /proj/berzelius-2026-62
+User:            x_telcr
+Slurm account:  berzelius-2026-62
+Repo:            /proj/berzelius-2026-62/users/x_telcr/nlp-project
+```
+
+Run commands from Berzelius.
+
+## 1. Clean Any Interrupted Build
+
+If a previous custom build was interrupted, remove its temporary directories. This can be slow if many files were created.
+
+```bash
+rm -rf /proj/berzelius-2026-62/users/x_telcr/apptainer_tmp
+rm -rf /proj/berzelius-2026-62/users/x_telcr/apptainer_cache
+```
+
+## 2. Create Minimal Runtime Directories
+
+```bash
+mkdir -p /proj/berzelius-2026-62/users/x_telcr/containers
+mkdir -p /proj/berzelius-2026-62/users/x_telcr/venvs
+mkdir -p /proj/berzelius-2026-62/users/x_telcr/hf_cache
+mkdir -p /proj/berzelius-2026-62/users/x_telcr/hf_datasets_cache
+mkdir -p /proj/berzelius-2026-62/users/x_telcr/results
+mkdir -p /proj/berzelius-2026-62/users/x_telcr/wandb
+mkdir -p /proj/berzelius-2026-62/users/x_telcr/wandb_cache
+```
+
+## 3. Pull a PyTorch Image
+
+This creates a `.sif` directly from Docker Hub. It should be much less painful than building a custom image with `%post`.
+
+```bash
+apptainer pull \
+  /proj/berzelius-2026-62/users/x_telcr/containers/pytorch-2.4.1-cuda12.4.sif \
+  docker://pytorch/pytorch:2.4.1-cuda12.4-cudnn9-runtime
+```
+
+## 4. Create a Project-Storage Virtualenv Inside the Image
+
+```bash
+apptainer exec \
+  --bind /proj/berzelius-2026-62/users/x_telcr:/work \
+  /proj/berzelius-2026-62/users/x_telcr/containers/pytorch-2.4.1-cuda12.4.sif \
+  bash -lc "python -m venv /work/venvs/smollm && source /work/venvs/smollm/bin/activate && python -m pip install --upgrade pip setuptools wheel"
+```
+
+Install only what is needed for training from prebuilt CSVs and W&B. RDKit and SELFIES are intentionally omitted for the first smoke path.
+
+```bash
+apptainer exec \
+  --bind /proj/berzelius-2026-62/users/x_telcr:/work \
+  /proj/berzelius-2026-62/users/x_telcr/containers/pytorch-2.4.1-cuda12.4.sif \
+  bash -lc "source /work/venvs/smollm/bin/activate && python -m pip install \
+    'datasets>=2.18.0' \
+    'huggingface-hub>=0.23.0' \
+    'pandas>=2.0.0' \
+    'pyyaml>=6.0.0' \
+    'transformers>=4.40.0' \
+    'trl>=0.9.0' \
+    'accelerate>=0.30.0' \
+    'wandb>=0.16.0'"
+```
+
+## 5. CPU Import Test
+
+```bash
+apptainer exec \
+  --bind /proj/berzelius-2026-62/users/x_telcr:/work \
+  /proj/berzelius-2026-62/users/x_telcr/containers/pytorch-2.4.1-cuda12.4.sif \
+  bash -lc "source /work/venvs/smollm/bin/activate && python -c 'import torch, transformers, trl, datasets, pandas, yaml; print(torch.__version__); print(\"imports ok\")'"
+```
+
+## 6. Submit the No-Build GPU Smoke Job
+
+The script uses tiny synthetic CSV splits and disables RDKit evaluation:
+
+```text
+slurm/berzelius_smoke_pulled_image.sh
+```
+
+Submit:
+
+```bash
+cd /proj/berzelius-2026-62/users/x_telcr/nlp-project/project
+sbatch slurm/berzelius_smoke_pulled_image.sh
+```
+
+Monitor:
+
+```bash
+squeue -u x_telcr
+tail -f slurm-smollm-pull-smoke-<jobid>.out
+```
+
+## 7. What This Tests
+
+This test checks:
+
+- Apptainer can run the PyTorch image.
+- The project imports.
+- Hugging Face model download works.
+- TRL SFT training starts.
+- The atomwise tokenizer path works.
+- Checkpoints write to project storage.
+
+It does not test:
+
+- Mol-Instructions download.
+- SELFIES decoding.
+- RDKit evaluation.
+- Real chemistry metrics.
+
+Those should come after this infrastructure test passes.

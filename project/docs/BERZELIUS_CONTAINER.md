@@ -80,6 +80,14 @@ mkdir -p /proj/<berzelius_project>/users/telio/apptainer_tmp
 
 ## Build the Container
 
+Before building a custom image, try the no-build path:
+
+```text
+docs/BERZELIUS_NO_BUILD.md
+```
+
+It follows the NSC Apptainer guide's `apptainer pull` workflow and is better for an initial smoke test, especially because your project storage is near the file quota.
+
 You do not need a GPU just to build the container. The build downloads the base image and installs Python packages; it does not run training or use CUDA devices. You only need a GPU later to test `torch.cuda.is_available()` and to train.
 
 If login-node builds are allowed and the machine is not busy, you can build directly after logging in. If you prefer not to build on the login node, request a CPU/regular interactive allocation. A GPU allocation is optional for building.
