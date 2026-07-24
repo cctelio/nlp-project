@@ -31,6 +31,7 @@ Useful project docs:
 ```text
 project/docs/PROJECT_ARCHITECTURE.md
 project/docs/ARRHENIUS_CONTAINER.md
+project/docs/BERZELIUS_CONTAINER.md
 project/docs/LOW_COMPUTE_RUNBOOK.md
 ```
 

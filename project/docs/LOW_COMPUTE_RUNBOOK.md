@@ -159,6 +159,28 @@ Avoid running HPO until one dry run and one short real run have completed.
 
 5. Only then run HPO.
 
+## Container Build Note for Arrhenius
+
+Arrhenius GPU nodes use NVIDIA Grace Hopper, which means the host CPU architecture is ARM64. If Apptainer reports:
+
+```text
+FATAL: image targets 'amd64', cannot run on 'arm64'
+```
+
+the container recipe pulled an x86/AMD64 image. Build from `containers/smollm-chemical-tokenization.def`, which uses an NVIDIA NGC PyTorch base image intended for NVIDIA GPU systems, and build it on an Arrhenius GPU node.
+
+## Berzelius First-Run Path
+
+If you have access to Berzelius, it is a good first target for this project because it is AI/ML-focused and supports Apptainer directly. Use:
+
+```text
+docs/BERZELIUS_CONTAINER.md
+slurm/berzelius_smoke_container.sh
+slurm/berzelius_short_train_container.sh
+```
+
+Run the smoke script before any HPO or full training.
+
 ## W&B Setup
 
 The code disables W&B by default:

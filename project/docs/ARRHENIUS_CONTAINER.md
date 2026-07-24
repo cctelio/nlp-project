@@ -44,6 +44,18 @@ cd nlp-project/project
 
 ## Build the Container
 
+The Arrhenius GPU partition uses NVIDIA Grace Hopper nodes. These have ARM CPUs, so the container base image must support `linux/arm64`. If a build fails with:
+
+```text
+FATAL: image targets 'amd64', cannot run on 'arm64'
+```
+
+then the pulled Docker image is for x86/AMD64 and cannot run its `%post` section on the ARM build node. The recipe in this repository uses NVIDIA's NGC PyTorch image for that reason:
+
+```text
+nvcr.io/nvidia/pytorch:25.06-py3
+```
+
 Start an interactive GPU allocation:
 
 ```bash
@@ -60,6 +72,8 @@ apptainer build \
   /nobackup/proj/disk/<project>/telio/containers/smollm-chemical-tokenization.sif \
   containers/smollm-chemical-tokenization.def
 ```
+
+Do not put the `.sif` under `/home`. Use `/nobackup/proj/disk/<project>/...` as shown above.
 
 Quick import test:
 

@@ -4,6 +4,11 @@ Run all commands in this file from the `project/` directory.
 
 If you have not tested the project yet, start with [docs/LOW_COMPUTE_RUNBOOK.md](docs/LOW_COMPUTE_RUNBOOK.md) before running the full experiments.
 
+Cluster guides:
+
+- [docs/BERZELIUS_CONTAINER.md](docs/BERZELIUS_CONTAINER.md)
+- [docs/ARRHENIUS_CONTAINER.md](docs/ARRHENIUS_CONTAINER.md)
+
 This repository compares tokenization strategies for small language models on chemical instruction data. The target task is natural-language-to-SMILES generation using the description-guided molecule design subset of Mol-Instructions.
 
 The base model is `HuggingFaceTB/SmolLM-135M`. The main research question is whether chemical tokenization helps a small pretrained language model generate valid and target-similar SMILES without harming the natural-language side of the instruction-following task.

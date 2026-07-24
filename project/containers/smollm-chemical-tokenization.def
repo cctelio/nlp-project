@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: pytorch/pytorch:2.4.1-cuda12.4-cudnn9-runtime
+From: nvcr.io/nvidia/pytorch:25.06-py3
 
 %labels
     Project SmolLM Chemical Tokenization
