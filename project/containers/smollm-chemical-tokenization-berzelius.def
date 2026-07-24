@@ -1,0 +1,40 @@
+Bootstrap: docker
+From: pytorch/pytorch:2.4.1-cuda12.4-cudnn9-runtime
+
+%labels
+    Project SmolLM Chemical Tokenization
+    Cluster Berzelius
+    Description Smaller x86_64 PyTorch CUDA runtime for Berzelius smoke tests
+
+%environment
+    export PYTHONUNBUFFERED=1
+    export PIP_NO_CACHE_DIR=1
+    export TOKENIZERS_PARALLELISM=false
+
+%post
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        git \
+        ca-certificates \
+        curl
+    rm -rf /var/lib/apt/lists/*
+
+    python -m pip install --upgrade pip setuptools wheel
+    python -m pip install \
+        "datasets>=2.18.0" \
+        "huggingface-hub>=0.23.0" \
+        "pandas>=2.0.0" \
+        "pyyaml>=6.0.0" \
+        "rdkit>=2023.9.0" \
+        "selfies>=2.1.0" \
+        "transformers>=4.40.0" \
+        "trl>=0.9.0" \
+        "wandb>=0.16.0" \
+        "pytest>=8.0.0" \
+        "ruff>=0.5.0"
+
+%runscript
+    exec "$@"
+
+%test
+    python -c "import torch, transformers, trl, rdkit, selfies; print('container ok')"

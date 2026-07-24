@@ -80,13 +80,19 @@ mkdir -p /proj/<berzelius_project>/users/telio/apptainer_tmp
 
 ## Build the Container
 
-Start a short interactive GPU allocation:
+You do not need a GPU just to build the container. The build downloads the base image and installs Python packages; it does not run training or use CUDA devices. You only need a GPU later to test `torch.cuda.is_available()` and to train.
+
+If login-node builds are allowed and the machine is not busy, you can build directly after logging in. If you prefer not to build on the login node, request a CPU/regular interactive allocation. A GPU allocation is optional for building.
+
+Optional interactive allocation:
 
 ```bash
-interactive --gpus=1 -A <berzelius_project_account> -t 00-02:00:00
+interactive -A <berzelius_project_account> -t 00-02:00:00
 ```
 
-Build with fakeroot into project storage:
+Build with fakeroot into project storage.
+
+Use the Berzelius-specific recipe first. It uses the standard PyTorch CUDA runtime image, which is smaller than the broad NVIDIA NGC image used for Arrhenius compatibility.
 
 ```bash
 cd /proj/<berzelius_project>/users/telio/nlp-project/project
@@ -96,8 +102,16 @@ APPTAINER_TMPDIR=/proj/<berzelius_project>/users/telio/apptainer_tmp \
 TMPDIR=/proj/<berzelius_project>/users/telio/apptainer_tmp \
 apptainer build --fakeroot \
   /proj/<berzelius_project>/users/telio/containers/smollm-chemical-tokenization.sif \
-  containers/smollm-chemical-tokenization.def
+  containers/smollm-chemical-tokenization-berzelius.def
 ```
+
+If this recipe fails because the base image is not available on the node architecture, fall back to:
+
+```text
+containers/smollm-chemical-tokenization.def
+```
+
+That fallback is larger because it uses NVIDIA's NGC PyTorch image.
 
 Test imports and GPU access:
 
@@ -113,7 +127,15 @@ The final printed value should be:
 True
 ```
 
-After a successful build, you can remove build caches if storage is tight:
+If you do not have a GPU allocation yet, run a CPU-only import test instead:
+
+```bash
+apptainer exec \
+  /proj/<berzelius_project>/users/telio/containers/smollm-chemical-tokenization.sif \
+  python -c "import torch, transformers, trl, rdkit, selfies; print(torch.__version__); print('container imports ok')"
+```
+
+After a successful build, remove build caches. Your project has a tight file quota, and interrupted Apptainer builds can leave many files behind:
 
 ```bash
 rm -rf /proj/<berzelius_project>/users/telio/apptainer_cache

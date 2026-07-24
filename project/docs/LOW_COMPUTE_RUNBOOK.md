@@ -175,6 +175,7 @@ If you have access to Berzelius, it is a good first target for this project beca
 
 ```text
 docs/BERZELIUS_CONTAINER.md
+containers/smollm-chemical-tokenization-berzelius.def
 slurm/berzelius_smoke_container.sh
 slurm/berzelius_short_train_container.sh
 ```
