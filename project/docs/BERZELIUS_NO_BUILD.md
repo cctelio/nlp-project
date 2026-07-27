@@ -195,11 +195,13 @@ sbatch --export=ALL,TOKENIZER_CONFIG=configs/tokenizers/default.yaml slurm/berze
 sbatch --export=ALL,TOKENIZER_CONFIG=configs/tokenizers/smilespe.yaml slurm/berzelius_short_train_pulled_image.sh
 ```
 
-You can pass runtime overrides through `EXTRA_ARGS`, for example:
+You can pass runtime overrides through simple Slurm environment variables. Avoid passing a multi-argument `EXTRA_ARGS` string; Slurm/shell quoting can split it incorrectly.
 
 ```bash
-sbatch --export=ALL,TOKENIZER_CONFIG=configs/tokenizers/atomwise.yaml,EXTRA_ARGS="--set training.per_device_train_batch_size=8 --set training.gradient_accumulation_steps=4 --set training.gradient_checkpointing=false" slurm/berzelius_short_train_pulled_image.sh
+sbatch --export=ALL,TOKENIZER_CONFIG=configs/tokenizers/atomwise.yaml,PER_DEVICE_TRAIN_BATCH_SIZE=8,GRADIENT_ACCUMULATION_STEPS=4,GRADIENT_CHECKPOINTING=false,PACKING=true,MAX_LENGTH=512 slurm/berzelius_short_train_pulled_image.sh
 ```
+
+Packing is often useful for these experiments because many target strings are much shorter than the configured `training.max_length`. Benchmark it rather than assuming it is always faster, since packing changes the number and shape of training sequences.
 
 ## 9. Monitoring GPU Usage
 

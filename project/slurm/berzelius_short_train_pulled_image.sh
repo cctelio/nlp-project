@@ -12,6 +12,12 @@ REPO_DIR="$PROJECT_BASE/nlp-project"
 PROJECT_DIR="$REPO_DIR/project"
 IMAGE_PATH="$PROJECT_BASE/containers/pytorch-2.4.1-cuda12.4.sif"
 TOKENIZER_CONFIG="${TOKENIZER_CONFIG:-configs/tokenizers/atomwise.yaml}"
+PER_DEVICE_TRAIN_BATCH_SIZE="${PER_DEVICE_TRAIN_BATCH_SIZE:-4}"
+GRADIENT_ACCUMULATION_STEPS="${GRADIENT_ACCUMULATION_STEPS:-8}"
+GRADIENT_CHECKPOINTING="${GRADIENT_CHECKPOINTING:-true}"
+MAX_STEPS="${MAX_STEPS:-50}"
+PACKING="${PACKING:-false}"
+MAX_LENGTH="${MAX_LENGTH:-512}"
 
 mkdir -p \
   "$PROJECT_BASE/hf_cache" \
@@ -59,7 +65,12 @@ apptainer exec --nv \
   bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/train.py \
     --config configs/default.yaml \
     --tokenizer_config '$TOKENIZER_CONFIG' \
-    --set training.max_steps=50 \
+    --set training.max_steps='$MAX_STEPS' \
+    --set training.per_device_train_batch_size='$PER_DEVICE_TRAIN_BATCH_SIZE' \
+    --set training.gradient_accumulation_steps='$GRADIENT_ACCUMULATION_STEPS' \
+    --set training.gradient_checkpointing='$GRADIENT_CHECKPOINTING' \
+    --set training.packing='$PACKING' \
+    --set training.max_length='$MAX_LENGTH' \
     --set training.output_root=/work/results/short_runs \
     --set training.save_total_limit=1 \
     --set evaluation.run_after_training=false \
@@ -69,7 +80,6 @@ apptainer exec --nv \
     --set data.train_path=/work/results/data/mol_instructions_description_guided_short/train.csv \
     --set data.validation_path=/work/results/data/mol_instructions_description_guided_short/validation.csv \
     --set data.test_path=/work/results/data/mol_instructions_description_guided_short/test.csv \
-    --set logging.disable_wandb=true \
-    ${EXTRA_ARGS:-}"
+    --set logging.disable_wandb=true"
 
 echo "GPU usage log: $GPU_LOG"
