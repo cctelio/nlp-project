@@ -16,6 +16,7 @@ VENV_PATH="$PROJECT_BASE/venvs/smollm"
 mkdir -p \
   "$PROJECT_BASE/hf_cache" \
   "$PROJECT_BASE/hf_datasets_cache" \
+  "$PROJECT_BASE/results/gpu_logs" \
   "$PROJECT_BASE/results/smoke_runs" \
   "$PROJECT_BASE/triton_cache" \
   "$PROJECT_BASE/wandb" \
@@ -24,6 +25,19 @@ mkdir -p \
 cd "$PROJECT_DIR"
 
 COMMON_ENV="export HF_HOME=/work/hf_cache; export HF_DATASETS_CACHE=/work/hf_datasets_cache; export WANDB_DIR=/work/wandb; export WANDB_CACHE_DIR=/work/wandb_cache; export TRITON_CACHE_DIR=/work/triton_cache; export TOKENIZERS_PARALLELISM=false"
+
+GPU_LOG="$PROJECT_BASE/results/gpu_logs/${SLURM_JOB_NAME}-${SLURM_JOB_ID}.csv"
+(
+  echo "timestamp,index,name,utilization_gpu_pct,utilization_memory_pct,memory_used_mib,memory_total_mib,power_draw_w"
+  while true; do
+    nvidia-smi \
+      --query-gpu=timestamp,index,name,utilization.gpu,utilization.memory,memory.used,memory.total,power.draw \
+      --format=csv,noheader,nounits
+    sleep 10
+  done
+) > "$GPU_LOG" 2>/dev/null &
+GPU_MONITOR_PID=$!
+trap 'kill "$GPU_MONITOR_PID" 2>/dev/null || true' EXIT
 
 apptainer exec --nv \
   --bind "$PROJECT_BASE:/work" \
@@ -45,4 +59,7 @@ apptainer exec --nv \
     --set data.train_path=/work/results/data/tiny_smoke/train.csv \
     --set data.validation_path=/work/results/data/tiny_smoke/validation.csv \
     --set data.test_path=/work/results/data/tiny_smoke/test.csv \
-    --set logging.disable_wandb=true"
+    --set logging.disable_wandb=true \
+    ${EXTRA_ARGS:-}"
+
+echo "GPU usage log: $GPU_LOG"

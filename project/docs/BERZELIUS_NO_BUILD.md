@@ -130,6 +130,12 @@ squeue -u x_telcr
 tail -f slurm-smollm-pull-smoke-<jobid>.out
 ```
 
+The script also writes a local GPU utilization log:
+
+```text
+/proj/berzelius-2026-62/users/x_telcr/results/gpu_logs/smollm-pull-smoke-<jobid>.csv
+```
+
 ## 7. What This Tests
 
 This test checks:
@@ -176,12 +182,54 @@ squeue -u x_telcr
 tail -f slurm-smollm-pull-short-<jobid>.out
 ```
 
+The script also writes a local GPU utilization log:
+
+```text
+/proj/berzelius-2026-62/users/x_telcr/results/gpu_logs/smollm-pull-short-<jobid>.csv
+```
+
 To test a different tokenizer without editing the script:
 
 ```bash
 sbatch --export=ALL,TOKENIZER_CONFIG=configs/tokenizers/default.yaml slurm/berzelius_short_train_pulled_image.sh
 sbatch --export=ALL,TOKENIZER_CONFIG=configs/tokenizers/smilespe.yaml slurm/berzelius_short_train_pulled_image.sh
 ```
+
+You can pass runtime overrides through `EXTRA_ARGS`, for example:
+
+```bash
+sbatch --export=ALL,TOKENIZER_CONFIG=configs/tokenizers/atomwise.yaml,EXTRA_ARGS="--set training.per_device_train_batch_size=8 --set training.gradient_accumulation_steps=4 --set training.gradient_checkpointing=false" slurm/berzelius_short_train_pulled_image.sh
+```
+
+## 9. Monitoring GPU Usage
+
+Berzelius provides cluster tools and you can also log metrics yourself:
+
+- `jobgraph -j <jobID>` generates a PNG with resource usage after or during a job.
+- `jobsh -j <jobID>` opens a shell on the node running your job. Inside it, use `nvidia-smi` or `nvtop` for live GPU utilization.
+- The pulled-image Slurm scripts in this repo write `nvidia-smi` samples every 10 seconds under `results/gpu_logs/`.
+
+For live monitoring:
+
+```bash
+jobsh -j <jobID>
+watch -n 2 nvidia-smi
+```
+
+For a Berzelius-generated graph:
+
+```bash
+jobgraph -j <jobID>
+ls -lh *.png
+```
+
+For the CSV written by the script:
+
+```bash
+tail -n 20 /proj/berzelius-2026-62/users/x_telcr/results/gpu_logs/smollm-pull-short-<jobid>.csv
+```
+
+W&B can also record GPU utilization, but keep it disabled until the local GPU logs show the job is using the GPU reasonably.
 
 ## If You Saw `Failed to find C compiler`
 
