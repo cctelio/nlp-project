@@ -178,6 +178,8 @@ docs/BERZELIUS_CONTAINER.md
 containers/smollm-chemical-tokenization-berzelius.def
 slurm/berzelius_smoke_container.sh
 slurm/berzelius_short_train_container.sh
+slurm/berzelius_smoke_pulled_image.sh
+slurm/berzelius_short_train_pulled_image.sh
 ```
 
 Run the smoke script before any HPO or full training.

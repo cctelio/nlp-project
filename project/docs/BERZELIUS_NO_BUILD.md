@@ -149,6 +149,37 @@ It does not test:
 
 Those should come after this infrastructure test passes.
 
+## 8. Run a Short Real-Data Training Test
+
+After the tiny smoke job passes, run:
+
+```text
+slurm/berzelius_short_train_pulled_image.sh
+```
+
+This job prepares 1024 Mol-Instructions examples and trains for 50 steps with evaluation generation disabled. It checks the real dataset preprocessing path and a longer training loop without spending full experiment compute.
+
+Submit:
+
+```bash
+cd /proj/berzelius-2026-62/users/x_telcr/nlp-project/project
+sbatch slurm/berzelius_short_train_pulled_image.sh
+```
+
+Monitor:
+
+```bash
+squeue -u x_telcr
+tail -f slurm-smollm-pull-short-<jobid>.out
+```
+
+To test a different tokenizer without editing the script:
+
+```bash
+sbatch --export=ALL,TOKENIZER_CONFIG=configs/tokenizers/default.yaml slurm/berzelius_short_train_pulled_image.sh
+sbatch --export=ALL,TOKENIZER_CONFIG=configs/tokenizers/smilespe.yaml slurm/berzelius_short_train_pulled_image.sh
+```
+
 ## If You Saw `Failed to find C compiler`
 
 That error came from Triton in a newer PyTorch stack installed inside the venv. Recreate the venv with `--system-site-packages` as shown above so it reuses the PyTorch bundled in the pulled image.
