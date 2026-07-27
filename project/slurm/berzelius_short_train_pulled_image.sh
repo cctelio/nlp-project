@@ -18,6 +18,9 @@ GRADIENT_CHECKPOINTING="${GRADIENT_CHECKPOINTING:-true}"
 MAX_STEPS="${MAX_STEPS:-50}"
 PACKING="${PACKING:-false}"
 MAX_LENGTH="${MAX_LENGTH:-512}"
+CANONICALIZE_SMILES="${CANONICALIZE_SMILES:-false}"
+EVALUATION_RUN_AFTER_TRAINING="${EVALUATION_RUN_AFTER_TRAINING:-false}"
+EVALUATION_MAX_VALIDATION_EXAMPLES="${EVALUATION_MAX_VALIDATION_EXAMPLES:-16}"
 
 mkdir -p \
   "$PROJECT_BASE/hf_cache" \
@@ -52,7 +55,7 @@ apptainer exec --nv \
   bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/prepare_data.py \
     --config configs/default.yaml \
     --set data.max_samples=1024 \
-    --set data.canonicalize_smiles=false \
+    --set data.canonicalize_smiles='$CANONICALIZE_SMILES' \
     --set data.cache_dir=/work/hf_cache/mol_instructions \
     --set data.processed_dir=/work/results/data/mol_instructions_description_guided_short \
     --set data.train_path=/work/results/data/mol_instructions_description_guided_short/train.csv \
@@ -73,7 +76,8 @@ apptainer exec --nv \
     --set training.max_length='$MAX_LENGTH' \
     --set training.output_root=/work/results/short_runs \
     --set training.save_total_limit=1 \
-    --set evaluation.run_after_training=false \
+    --set evaluation.run_after_training='$EVALUATION_RUN_AFTER_TRAINING' \
+    --set evaluation.max_validation_examples='$EVALUATION_MAX_VALIDATION_EXAMPLES' \
     --set generation.batch_size=4 \
     --set data.cache_dir=/work/hf_cache/mol_instructions \
     --set data.processed_dir=/work/results/data/mol_instructions_description_guided_short \
