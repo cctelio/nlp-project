@@ -70,7 +70,7 @@ apptainer exec \
   bash -lc "python -m venv --system-site-packages /work/venvs/smollm && source /work/venvs/smollm/bin/activate && python -m pip install --upgrade pip setuptools wheel"
 ```
 
-Install only what is needed for training from prebuilt CSVs and W&B. RDKit and SELFIES are intentionally omitted for the first smoke path.
+Install only what is needed for the smoke path, real-data preprocessing without RDKit canonicalization, and W&B. RDKit is intentionally omitted for now; install it later when running chemistry evaluation.
 
 ```bash
 apptainer exec \
@@ -81,6 +81,7 @@ apptainer exec \
     'huggingface-hub>=0.23.0' \
     'pandas>=2.0.0' \
     'pyyaml>=6.0.0' \
+    'selfies>=2.1.0' \
     'transformers>=4.40.0,<4.47.0' \
     'trl>=0.9.0,<0.13.0' \
     'accelerate>=0.30.0,<1.0.0' \
@@ -104,7 +105,7 @@ The path should point inside the container's Conda environment, not `/work/venvs
 apptainer exec \
   --bind /proj/berzelius-2026-62/users/x_telcr:/work \
   /proj/berzelius-2026-62/users/x_telcr/containers/pytorch-2.4.1-cuda12.4.sif \
-  bash -lc "source /work/venvs/smollm/bin/activate && python -c 'import torch, transformers, trl, datasets, pandas, yaml; print(torch.__version__); print(\"imports ok\")'"
+  bash -lc "source /work/venvs/smollm/bin/activate && python -c 'import torch, transformers, trl, datasets, pandas, yaml, selfies; print(torch.__version__); print(\"imports ok\")'"
 ```
 
 ## 6. Submit the No-Build GPU Smoke Job
@@ -158,6 +159,8 @@ slurm/berzelius_short_train_pulled_image.sh
 ```
 
 This job prepares 1024 Mol-Instructions examples and trains for 50 steps with evaluation generation disabled. It checks the real dataset preprocessing path and a longer training loop without spending full experiment compute.
+
+Mol-Instructions stores the relevant molecular targets as SELFIES, so this short job requires the `selfies` package. It disables RDKit canonicalization for now so RDKit is not required yet.
 
 Submit:
 

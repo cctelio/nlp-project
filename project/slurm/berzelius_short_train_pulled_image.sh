@@ -32,6 +32,7 @@ apptainer exec --nv \
   bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/prepare_data.py \
     --config configs/default.yaml \
     --set data.max_samples=1024 \
+    --set data.canonicalize_smiles=false \
     --set data.cache_dir=/work/hf_cache/mol_instructions \
     --set data.processed_dir=/work/results/data/mol_instructions_description_guided_short \
     --set data.train_path=/work/results/data/mol_instructions_description_guided_short/train.csv \
