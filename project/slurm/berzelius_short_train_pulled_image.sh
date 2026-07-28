@@ -11,6 +11,7 @@ PROJECT_BASE="/proj/berzelius-2026-62/users/x_telcr"
 REPO_DIR="$PROJECT_BASE/nlp-project"
 PROJECT_DIR="$REPO_DIR/project"
 IMAGE_PATH="$PROJECT_BASE/containers/pytorch-2.4.1-cuda12.4.sif"
+CONFIG_PATH="${CONFIG_PATH:-configs/default.yaml}"
 MODEL_ID="${MODEL_ID:-HuggingFaceTB/SmolLM-135M}"
 TOKENIZER_CONFIG="${TOKENIZER_CONFIG:-configs/tokenizers/atomwise.yaml}"
 PER_DEVICE_TRAIN_BATCH_SIZE="${PER_DEVICE_TRAIN_BATCH_SIZE:-4}"
@@ -62,7 +63,7 @@ apptainer exec --nv \
   --bind "$PROJECT_BASE:/work" \
   "$IMAGE_PATH" \
   bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/prepare_data.py \
-    --config configs/default.yaml \
+    --config '$CONFIG_PATH' \
     --set data.max_samples='$DATA_MAX_SAMPLES' \
     --set data.canonicalize_smiles='$CANONICALIZE_SMILES' \
     --set data.cache_dir=/work/hf_cache/mol_instructions \
@@ -75,7 +76,7 @@ apptainer exec --nv \
   --bind "$PROJECT_BASE:/work" \
   "$IMAGE_PATH" \
   bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python -c 'import src.training.train_sft as t; print(\"TRAIN_SFT_SOURCE=\" + t.__file__)' && python scripts/train.py \
-    --config configs/default.yaml \
+    --config '$CONFIG_PATH' \
     --tokenizer_config '$TOKENIZER_CONFIG' \
     --set model.model_id='$MODEL_ID' \
     --set data.sft_format='$SFT_FORMAT' \
