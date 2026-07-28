@@ -157,6 +157,9 @@ def _make_sft_config(SFTConfig: Any, run_dir: Path, config: dict[str, Any], repo
         "dataloader_num_workers": training.get("dataloader_num_workers", 0),
         "max_grad_norm": training.get("max_grad_norm", 1.0),
     }
+    for optional_key in ("loss_type", "packing_strategy", "padding_free", "eval_packing", "truncation_mode"):
+        if optional_key in training:
+            kwargs[optional_key] = training[optional_key]
     if sft_format == "text" or force_dataset_text_field:
         kwargs["dataset_text_field"] = "text"
     if sft_format == "prompt_completion" and _signature_has(SFTConfig.__init__, "completion_only_loss"):
