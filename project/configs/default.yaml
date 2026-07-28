@@ -81,6 +81,7 @@ generation:
 
 evaluation:
   run_after_training: true
+  split: validation
   max_validation_examples: 256
 
 logging:

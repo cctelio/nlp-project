@@ -13,7 +13,7 @@ from src.data.preprocessing import PROMPT_TEMPLATE
 from src.evaluation.evaluate import evaluate_rows
 from src.tokenization.base import load_representation
 from src.utils.config import load_yaml
-from src.utils.logging import read_jsonl
+from src.utils.logging import read_rows
 from src.utils.paths import resolve_path
 from src.utils.reproducibility import stable_int_seed
 
@@ -43,7 +43,7 @@ def main() -> None:
     data = config.get("data", {})
     model_config = config.get("model", {})
     split_path = resolve_path(data.get(f"{args.split}_path"))
-    rows = read_jsonl(split_path)
+    rows = read_rows(split_path)
     if args.max_examples:
         rows = rows[: args.max_examples]
 

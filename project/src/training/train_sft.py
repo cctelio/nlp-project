@@ -422,20 +422,30 @@ def train_from_config(config: dict[str, Any]) -> Path:
     if config.get("evaluation", {}).get("run_after_training", True):
         generation_model = trainer.accelerator.unwrap_model(trainer.model) if hasattr(trainer, "accelerator") else trainer.model
         eval_config = dict(config.get("generation", {}))
-        eval_config["seed"] = stable_int_seed(seed, "validation-generation")
-        eval_rows = validation_rows[: int(config.get("evaluation", {}).get("max_validation_examples", len(validation_rows)))]
-        validation_metrics = evaluate_rows(
+        evaluation_config = config.get("evaluation", {})
+        eval_split = str(evaluation_config.get("split", "validation"))
+        if eval_split == "train":
+            selected_rows = train_rows
+        elif eval_split == "validation":
+            selected_rows = validation_rows
+        elif eval_split == "test":
+            selected_rows = test_rows
+        else:
+            raise ValueError(f"Unsupported evaluation.split: {eval_split}")
+        eval_config["seed"] = stable_int_seed(seed, f"{eval_split}-generation")
+        eval_rows = selected_rows[: int(evaluation_config.get("max_validation_examples", len(selected_rows)))]
+        generated_metrics = evaluate_rows(
             model=generation_model,
             tokenizer=tokenizer_result.tokenizer,
             representation=tokenizer_result.representation,
             rows=eval_rows,
-            split_name="validation",
+            split_name=eval_split,
             output_dir=run_dir / "evaluation",
             generation_config=eval_config,
             prompt_template=prompt_template,
             use_chat_template=use_chat_template,
         )
-        combined_metrics = {**train_metrics, **validation_metrics}
+        combined_metrics = {**train_metrics, **generated_metrics}
         write_json(run_dir / "metrics.json", combined_metrics)
 
     logger.info("Finished run at %s", run_dir)

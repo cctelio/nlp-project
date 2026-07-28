@@ -26,6 +26,7 @@ LOSS_TYPE="${LOSS_TYPE:-nll}"
 MAX_LENGTH="${MAX_LENGTH:-512}"
 CANONICALIZE_SMILES="${CANONICALIZE_SMILES:-false}"
 EVALUATION_RUN_AFTER_TRAINING="${EVALUATION_RUN_AFTER_TRAINING:-false}"
+EVALUATION_SPLIT="${EVALUATION_SPLIT:-validation}"
 EVALUATION_MAX_VALIDATION_EXAMPLES="${EVALUATION_MAX_VALIDATION_EXAMPLES:-16}"
 GENERATION_MAX_NEW_TOKENS="${GENERATION_MAX_NEW_TOKENS:-160}"
 SFT_FORMAT="${SFT_FORMAT:-text}"
@@ -94,6 +95,7 @@ apptainer exec --nv \
     --set training.output_root=/work/results/short_runs \
     --set training.save_total_limit=1 \
     --set evaluation.run_after_training='$EVALUATION_RUN_AFTER_TRAINING' \
+    --set evaluation.split='$EVALUATION_SPLIT' \
     --set evaluation.max_validation_examples='$EVALUATION_MAX_VALIDATION_EXAMPLES' \
     --set generation.max_new_tokens='$GENERATION_MAX_NEW_TOKENS' \
     --set generation.batch_size=4 \
