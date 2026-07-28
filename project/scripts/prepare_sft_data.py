@@ -7,7 +7,7 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.data.preprocessing import PROMPT_TEMPLATE
 from src.data.sft import precompute_sft_splits

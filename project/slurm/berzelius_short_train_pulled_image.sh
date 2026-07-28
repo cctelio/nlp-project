@@ -43,7 +43,7 @@ mkdir -p \
 
 cd "$PROJECT_DIR"
 
-COMMON_ENV="export HF_HOME=/work/hf_cache; export HF_DATASETS_CACHE=/work/hf_datasets_cache; export WANDB_DIR=/work/wandb; export WANDB_CACHE_DIR=/work/wandb_cache; export TRITON_CACHE_DIR=/work/triton_cache; export TOKENIZERS_PARALLELISM=false"
+COMMON_ENV="export PYTHONPATH=/work/nlp-project/project:\${PYTHONPATH:-}; export HF_HOME=/work/hf_cache; export HF_DATASETS_CACHE=/work/hf_datasets_cache; export WANDB_DIR=/work/wandb; export WANDB_CACHE_DIR=/work/wandb_cache; export TRITON_CACHE_DIR=/work/triton_cache; export TOKENIZERS_PARALLELISM=false"
 
 GPU_LOG="$PROJECT_BASE/results/gpu_logs/${SLURM_JOB_NAME}-${SLURM_JOB_ID}.csv"
 (
@@ -74,7 +74,7 @@ apptainer exec --nv \
 apptainer exec --nv \
   --bind "$PROJECT_BASE:/work" \
   "$IMAGE_PATH" \
-  bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/train.py \
+  bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python -c 'import src.training.train_sft as t; print(\"TRAIN_SFT_SOURCE=\" + t.__file__)' && python scripts/train.py \
     --config configs/default.yaml \
     --tokenizer_config '$TOKENIZER_CONFIG' \
     --set model.model_id='$MODEL_ID' \
