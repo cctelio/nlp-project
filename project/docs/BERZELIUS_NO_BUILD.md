@@ -278,3 +278,5 @@ bash slurm/sbatch_instruct_atomwise_500_eval.txt
 ```
 
 This runs atomwise for 500 steps, uses completion-only loss when the installed TRL version supports it, and evaluates 32 validation examples.
+
+Packing is disabled for this instruct prompt-completion test because the currently installed TRL version's packing path expects a single `text` field. Keep packing for the original text-format runs.
