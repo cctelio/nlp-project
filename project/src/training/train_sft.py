@@ -88,13 +88,28 @@ def _prepare_sft_dataset(
         prompt = _chat_prompt(tokenizer, instruction) if use_chat_template else format_generation_prompt(instruction, prompt_template)
         completion = f"{response.strip()}{eos_token}"
         if sft_format == "prompt_completion":
-            formatted_rows.append({**row, "prompt": prompt, "completion": completion, "response_smiles": response})
+            formatted_rows.append(
+                {
+                    **row,
+                    "prompt": prompt,
+                    "completion": completion,
+                    "response_smiles": response,
+                    # Compatibility fallback for older TRL versions that still require dataset_text_field="text".
+                    "text": f"{prompt}{completion}",
+                }
+            )
         elif sft_format == "text":
+            text = f"{prompt}{completion}" if use_chat_template else format_sft_text(
+                instruction,
+                response=response,
+                eos_token=eos_token,
+                template=prompt_template,
+            )
             formatted_rows.append(
                 {
                     **row,
                     "response_smiles": response,
-                    "text": format_sft_text(instruction, response=response, eos_token=eos_token, template=prompt_template),
+                    "text": text,
                 }
             )
         else:
@@ -141,9 +156,8 @@ def _make_sft_config(SFTConfig: Any, run_dir: Path, config: dict[str, Any], repo
         "dataloader_num_workers": training.get("dataloader_num_workers", 0),
         "max_grad_norm": training.get("max_grad_norm", 1.0),
     }
-    if sft_format == "text":
-        kwargs["dataset_text_field"] = "text"
-    elif sft_format == "prompt_completion" and _signature_has(SFTConfig.__init__, "completion_only_loss"):
+    kwargs["dataset_text_field"] = "text"
+    if sft_format == "prompt_completion" and _signature_has(SFTConfig.__init__, "completion_only_loss"):
         kwargs["completion_only_loss"] = training.get("completion_only_loss", True)
     strategy_key = "eval_strategy" if _signature_has(SFTConfig.__init__, "eval_strategy") else "evaluation_strategy"
     kwargs[strategy_key] = training.get("eval_strategy", "steps")
@@ -365,7 +379,7 @@ def train_from_config(config: dict[str, Any]) -> Path:
         trainer_kwargs["processing_class"] = tokenizer_result.tokenizer
     elif "tokenizer" in trainer_signature:
         trainer_kwargs["tokenizer"] = tokenizer_result.tokenizer
-    if sft_format == "text" and "dataset_text_field" in trainer_signature:
+    if "dataset_text_field" in trainer_signature:
         trainer_kwargs["dataset_text_field"] = "text"
 
     trainer = SFTTrainer(**trainer_kwargs)

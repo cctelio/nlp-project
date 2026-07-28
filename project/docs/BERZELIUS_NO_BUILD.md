@@ -280,3 +280,21 @@ bash slurm/sbatch_instruct_atomwise_500_eval.txt
 This runs atomwise for 500 steps, uses completion-only loss when the installed TRL version supports it, and evaluates 32 validation examples.
 
 Packing is disabled for this instruct prompt-completion test because the currently installed TRL version's packing path expects a single `text` field. Keep packing for the original text-format runs.
+
+The cluster TRL version also expects `dataset_text_field="text"` in the non-packed path. The project therefore writes both `prompt`/`completion` columns and a compatibility `text` column. This still tests the instruct model with the tokenizer chat template, but true completion-only masking depends on the installed TRL version.
+
+For the installed cluster TRL version, the most reliable chat-template plus packing mode is:
+
+```text
+SFT_FORMAT=text
+USE_CHAT_TEMPLATE=true
+PACKING=true
+```
+
+That path formats `text` with the tokenizer chat template and lets the older TRL packer operate on the `text` column. It does not provide completion-only masking, but it matches the working packing API on the current cluster environment.
+
+The ready-to-run command is:
+
+```text
+slurm/sbatch_instruct_atomwise_500_packed_text_eval.txt
+```
