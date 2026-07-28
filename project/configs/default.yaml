@@ -33,6 +33,7 @@ data:
   prompt_template: "### Instruction:\n{instruction}\n\n### Response:\n"
   sft_format: text
   use_chat_template: false
+  force_dataset_text_field: false
 
 tokenizer:
   strategy: default

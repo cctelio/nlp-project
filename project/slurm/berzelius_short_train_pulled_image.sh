@@ -26,6 +26,7 @@ EVALUATION_MAX_VALIDATION_EXAMPLES="${EVALUATION_MAX_VALIDATION_EXAMPLES:-16}"
 GENERATION_MAX_NEW_TOKENS="${GENERATION_MAX_NEW_TOKENS:-160}"
 SFT_FORMAT="${SFT_FORMAT:-text}"
 USE_CHAT_TEMPLATE="${USE_CHAT_TEMPLATE:-false}"
+DATA_MAX_SAMPLES="${DATA_MAX_SAMPLES:-1024}"
 
 mkdir -p \
   "$PROJECT_BASE/hf_cache" \
@@ -59,7 +60,7 @@ apptainer exec --nv \
   "$IMAGE_PATH" \
   bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/prepare_data.py \
     --config configs/default.yaml \
-    --set data.max_samples=1024 \
+    --set data.max_samples='$DATA_MAX_SAMPLES' \
     --set data.canonicalize_smiles='$CANONICALIZE_SMILES' \
     --set data.cache_dir=/work/hf_cache/mol_instructions \
     --set data.processed_dir=/work/results/data/mol_instructions_description_guided_short \

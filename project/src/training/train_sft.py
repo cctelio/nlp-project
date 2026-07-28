@@ -121,6 +121,7 @@ def _make_sft_config(SFTConfig: Any, run_dir: Path, config: dict[str, Any], repo
     training = config.get("training", {})
     data = config.get("data", {})
     sft_format = data.get("sft_format", "text")
+    force_dataset_text_field = bool(data.get("force_dataset_text_field", False))
     bf16 = bool(training.get("bf16", True))
     if bf16:
         try:
@@ -156,7 +157,8 @@ def _make_sft_config(SFTConfig: Any, run_dir: Path, config: dict[str, Any], repo
         "dataloader_num_workers": training.get("dataloader_num_workers", 0),
         "max_grad_norm": training.get("max_grad_norm", 1.0),
     }
-    kwargs["dataset_text_field"] = "text"
+    if sft_format == "text" or force_dataset_text_field:
+        kwargs["dataset_text_field"] = "text"
     if sft_format == "prompt_completion" and _signature_has(SFTConfig.__init__, "completion_only_loss"):
         kwargs["completion_only_loss"] = training.get("completion_only_loss", True)
     strategy_key = "eval_strategy" if _signature_has(SFTConfig.__init__, "eval_strategy") else "evaluation_strategy"
@@ -379,7 +381,8 @@ def train_from_config(config: dict[str, Any]) -> Path:
         trainer_kwargs["processing_class"] = tokenizer_result.tokenizer
     elif "tokenizer" in trainer_signature:
         trainer_kwargs["tokenizer"] = tokenizer_result.tokenizer
-    if "dataset_text_field" in trainer_signature:
+    force_dataset_text_field = bool(data_config.get("force_dataset_text_field", False))
+    if (sft_format == "text" or force_dataset_text_field) and "dataset_text_field" in trainer_signature:
         trainer_kwargs["dataset_text_field"] = "text"
 
     trainer = SFTTrainer(**trainer_kwargs)
