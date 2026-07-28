@@ -77,6 +77,7 @@ def main() -> None:
         output_dir=run_dir / "evaluation",
         generation_config=generation,
         prompt_template=data.get("prompt_template") or PROMPT_TEMPLATE,
+        use_chat_template=bool(data.get("use_chat_template", False)),
     )
     print(metrics)
 

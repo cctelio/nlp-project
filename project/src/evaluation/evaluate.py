@@ -20,6 +20,7 @@ def evaluate_rows(
     output_dir: str | Path,
     generation_config: dict[str, Any],
     prompt_template: str,
+    use_chat_template: bool = False,
 ) -> dict[str, Any]:
     """Generate outputs for rows, compute metrics, and save artifacts."""
     output_dir = Path(output_dir)
@@ -36,6 +37,7 @@ def evaluate_rows(
         do_sample=bool(generation_config.get("do_sample", False)),
         seed=int(generation_config.get("seed", 42)),
         prompt_template=prompt_template,
+        use_chat_template=use_chat_template,
     )
     metrics, enriched_records = evaluate_generation_records(records, tokenizer=tokenizer, representation=representation)
     prefixed_metrics = {f"{split_name}/{key}": value for key, value in metrics.items()}

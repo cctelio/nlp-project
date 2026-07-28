@@ -8,7 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from src.data.preprocessing import PROMPT_TEMPLATE, format_sft_text
+from src.data.preprocessing import PROMPT_TEMPLATE, format_generation_prompt, format_sft_text
 from src.data.sft import precompute_sft_splits
 from src.evaluation.evaluate import evaluate_rows
 from src.tokenization.base import load_representation
@@ -56,25 +56,56 @@ def _resolve_torch_dtype(torch: Any, dtype_name: str):
     raise ValueError(f"Unsupported torch dtype: {dtype_name}")
 
 
-def _prepare_text_dataset(Dataset: Any, rows: list[dict[str, Any]], representation: Any, tokenizer: Any, prompt_template: str):
+def _chat_prompt(tokenizer: Any, instruction: str) -> str:
+    """Format one user instruction with the model chat template."""
+    if not getattr(tokenizer, "chat_template", None):
+        raise ValueError("data.use_chat_template=true requires a tokenizer with a chat_template.")
+    return tokenizer.apply_chat_template(
+        [{"role": "user", "content": instruction.strip()}],
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+
+
+def _prepare_sft_dataset(
+    Dataset: Any,
+    rows: list[dict[str, Any]],
+    representation: Any,
+    tokenizer: Any,
+    prompt_template: str,
+    *,
+    use_chat_template: bool,
+    sft_format: str,
+):
     eos_token = tokenizer.eos_token or ""
     formatted_rows = []
     for row in rows:
-        if row.get("text"):
+        if sft_format == "text" and row.get("text"):
             formatted_rows.append(dict(row))
             continue
+        instruction = str(row["instruction"])
         response = row.get("response_smiles") or representation.encode_smiles(str(row["target_smiles"]))
-        formatted_rows.append(
-            {
-                **row,
-                "text": format_sft_text(str(row["instruction"]), response=response, eos_token=eos_token, template=prompt_template),
-            }
-        )
+        prompt = _chat_prompt(tokenizer, instruction) if use_chat_template else format_generation_prompt(instruction, prompt_template)
+        completion = f"{response.strip()}{eos_token}"
+        if sft_format == "prompt_completion":
+            formatted_rows.append({**row, "prompt": prompt, "completion": completion, "response_smiles": response})
+        elif sft_format == "text":
+            formatted_rows.append(
+                {
+                    **row,
+                    "response_smiles": response,
+                    "text": format_sft_text(instruction, response=response, eos_token=eos_token, template=prompt_template),
+                }
+            )
+        else:
+            raise ValueError(f"Unsupported data.sft_format: {sft_format}")
     return Dataset.from_list(formatted_rows)
 
 
 def _make_sft_config(SFTConfig: Any, run_dir: Path, config: dict[str, Any], report_to: str | list[str]):
     training = config.get("training", {})
+    data = config.get("data", {})
+    sft_format = data.get("sft_format", "text")
     bf16 = bool(training.get("bf16", True))
     if bf16:
         try:
@@ -109,8 +140,11 @@ def _make_sft_config(SFTConfig: Any, run_dir: Path, config: dict[str, Any], repo
         "gradient_checkpointing": training.get("gradient_checkpointing", True),
         "dataloader_num_workers": training.get("dataloader_num_workers", 0),
         "max_grad_norm": training.get("max_grad_norm", 1.0),
-        "dataset_text_field": "text",
     }
+    if sft_format == "text":
+        kwargs["dataset_text_field"] = "text"
+    elif sft_format == "prompt_completion" and _signature_has(SFTConfig.__init__, "completion_only_loss"):
+        kwargs["completion_only_loss"] = training.get("completion_only_loss", True)
     strategy_key = "eval_strategy" if _signature_has(SFTConfig.__init__, "eval_strategy") else "evaluation_strategy"
     kwargs[strategy_key] = training.get("eval_strategy", "steps")
     kwargs["eval_steps"] = training.get("eval_steps", 250)
@@ -224,6 +258,8 @@ def train_from_config(config: dict[str, Any]) -> Path:
         if not bf16_supported:
             training_config["bf16"] = False
     prompt_template = data_config.get("prompt_template") or PROMPT_TEMPLATE
+    use_chat_template = bool(data_config.get("use_chat_template", False))
+    sft_format = data_config.get("sft_format", "text")
 
     strategy = tokenizer_config.get("strategy", "default")
     output_root = resolve_path(training_config.get("output_root", "results/runs"))
@@ -270,13 +306,23 @@ def train_from_config(config: dict[str, Any]) -> Path:
     write_json(run_dir / "tokenizer_metrics.json", tokenizer_result.metrics)
     logger.info("Tokenizer metrics: %s", tokenizer_result.metrics)
 
-    train_dataset = _prepare_text_dataset(Dataset, train_rows, tokenizer_result.representation, tokenizer_result.tokenizer, prompt_template)
-    validation_dataset = _prepare_text_dataset(
+    train_dataset = _prepare_sft_dataset(
+        Dataset,
+        train_rows,
+        tokenizer_result.representation,
+        tokenizer_result.tokenizer,
+        prompt_template,
+        use_chat_template=use_chat_template,
+        sft_format=sft_format,
+    )
+    validation_dataset = _prepare_sft_dataset(
         Dataset,
         validation_rows,
         tokenizer_result.representation,
         tokenizer_result.tokenizer,
         prompt_template,
+        use_chat_template=use_chat_template,
+        sft_format=sft_format,
     )
 
     dtype = _resolve_torch_dtype(torch, model_config.get("torch_dtype", "bfloat16"))
@@ -319,7 +365,7 @@ def train_from_config(config: dict[str, Any]) -> Path:
         trainer_kwargs["processing_class"] = tokenizer_result.tokenizer
     elif "tokenizer" in trainer_signature:
         trainer_kwargs["tokenizer"] = tokenizer_result.tokenizer
-    if "dataset_text_field" in trainer_signature:
+    if sft_format == "text" and "dataset_text_field" in trainer_signature:
         trainer_kwargs["dataset_text_field"] = "text"
 
     trainer = SFTTrainer(**trainer_kwargs)
@@ -367,6 +413,7 @@ def train_from_config(config: dict[str, Any]) -> Path:
             output_dir=run_dir / "evaluation",
             generation_config=eval_config,
             prompt_template=prompt_template,
+            use_chat_template=use_chat_template,
         )
         combined_metrics = {**train_metrics, **validation_metrics}
         write_json(run_dir / "metrics.json", combined_metrics)

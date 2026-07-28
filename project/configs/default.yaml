@@ -31,6 +31,8 @@ data:
   canonicalize_smiles: true
   max_samples:
   prompt_template: "### Instruction:\n{instruction}\n\n### Response:\n"
+  sft_format: text
+  use_chat_template: false
 
 tokenizer:
   strategy: default
@@ -46,6 +48,7 @@ training:
   per_device_eval_batch_size: 4
   gradient_accumulation_steps: 8
   learning_rate: 0.00002
+  completion_only_loss: true
   warmup_ratio: 0.05
   weight_decay: 0.01
   max_length: 512

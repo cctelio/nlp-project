@@ -236,3 +236,45 @@ W&B can also record GPU utilization, but keep it disabled until the local GPU lo
 ## If You Saw `Failed to find C compiler`
 
 That error came from Triton in a newer PyTorch stack installed inside the venv. Recreate the venv with `--system-site-packages` as shown above so it reuses the PyTorch bundled in the pulled image.
+
+## Tiny RDKit Evaluation Job
+
+After installing RDKit, submit a minimal evaluation-enabled run with:
+
+```bash
+bash slurm/submit_berzelius_eval_tiny.sh
+```
+
+This wrapper runs atomwise for 10 steps with:
+
+```text
+CANONICALIZE_SMILES=true
+EVALUATION_RUN_AFTER_TRAINING=true
+EVALUATION_MAX_VALIDATION_EXAMPLES=8
+```
+
+It is meant to test RDKit canonicalization, generation, and metrics before larger evaluation jobs.
+
+## Instruct Model Test
+
+The first quality-focused test should use the model's chat template and TRL's prompt-completion dataset shape. This repository now supports that through:
+
+```text
+SFT_FORMAT=prompt_completion
+USE_CHAT_TEMPLATE=true
+MODEL_ID=HuggingFaceTB/SmolLM-135M-Instruct
+```
+
+The ready-to-run command is stored in:
+
+```text
+slurm/sbatch_instruct_atomwise_500_eval.txt
+```
+
+Run it with:
+
+```bash
+bash slurm/sbatch_instruct_atomwise_500_eval.txt
+```
+
+This runs atomwise for 500 steps, uses completion-only loss when the installed TRL version supports it, and evaluates 32 validation examples.

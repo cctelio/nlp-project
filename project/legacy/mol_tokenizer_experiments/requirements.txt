@@ -1,0 +1,8 @@
+datasets
+numpy
+pandas
+rdkit
+torch
+transformers
+trl
+wandb

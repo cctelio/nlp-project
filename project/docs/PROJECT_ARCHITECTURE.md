@@ -82,7 +82,7 @@ legacy/
 
 2. `scripts/train.py`
 
-   Loads the split CSV/JSONL files, builds the selected SMILES representation, loads SmolLM, extends the tokenizer vocabulary if needed, fine-tunes with TRL `SFTTrainer`, saves the final model, and optionally runs validation generation.
+   Loads the split CSV/JSONL files, builds the selected SMILES representation, loads SmolLM, extends the tokenizer vocabulary if needed, fine-tunes with TRL `SFTTrainer`, saves the final model, and optionally runs validation generation. The default path uses a single `text` column. For instruction-tuned models, set `data.sft_format=prompt_completion` and `data.use_chat_template=true` so TRL receives `prompt` and `completion` columns and the prompt is formatted with the model tokenizer's chat template.
 
 3. `scripts/evaluate.py`
 

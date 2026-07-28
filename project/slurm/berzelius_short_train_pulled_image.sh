@@ -11,16 +11,21 @@ PROJECT_BASE="/proj/berzelius-2026-62/users/x_telcr"
 REPO_DIR="$PROJECT_BASE/nlp-project"
 PROJECT_DIR="$REPO_DIR/project"
 IMAGE_PATH="$PROJECT_BASE/containers/pytorch-2.4.1-cuda12.4.sif"
+MODEL_ID="${MODEL_ID:-HuggingFaceTB/SmolLM-135M}"
 TOKENIZER_CONFIG="${TOKENIZER_CONFIG:-configs/tokenizers/atomwise.yaml}"
 PER_DEVICE_TRAIN_BATCH_SIZE="${PER_DEVICE_TRAIN_BATCH_SIZE:-4}"
 GRADIENT_ACCUMULATION_STEPS="${GRADIENT_ACCUMULATION_STEPS:-8}"
 GRADIENT_CHECKPOINTING="${GRADIENT_CHECKPOINTING:-true}"
 MAX_STEPS="${MAX_STEPS:-50}"
+LEARNING_RATE="${LEARNING_RATE:-0.00002}"
 PACKING="${PACKING:-false}"
 MAX_LENGTH="${MAX_LENGTH:-512}"
 CANONICALIZE_SMILES="${CANONICALIZE_SMILES:-false}"
 EVALUATION_RUN_AFTER_TRAINING="${EVALUATION_RUN_AFTER_TRAINING:-false}"
 EVALUATION_MAX_VALIDATION_EXAMPLES="${EVALUATION_MAX_VALIDATION_EXAMPLES:-16}"
+GENERATION_MAX_NEW_TOKENS="${GENERATION_MAX_NEW_TOKENS:-160}"
+SFT_FORMAT="${SFT_FORMAT:-text}"
+USE_CHAT_TEMPLATE="${USE_CHAT_TEMPLATE:-false}"
 
 mkdir -p \
   "$PROJECT_BASE/hf_cache" \
@@ -68,7 +73,11 @@ apptainer exec --nv \
   bash -lc "$COMMON_ENV; source /work/venvs/smollm/bin/activate && cd /work/nlp-project/project && python scripts/train.py \
     --config configs/default.yaml \
     --tokenizer_config '$TOKENIZER_CONFIG' \
+    --set model.model_id='$MODEL_ID' \
+    --set data.sft_format='$SFT_FORMAT' \
+    --set data.use_chat_template='$USE_CHAT_TEMPLATE' \
     --set training.max_steps='$MAX_STEPS' \
+    --set training.learning_rate='$LEARNING_RATE' \
     --set training.per_device_train_batch_size='$PER_DEVICE_TRAIN_BATCH_SIZE' \
     --set training.gradient_accumulation_steps='$GRADIENT_ACCUMULATION_STEPS' \
     --set training.gradient_checkpointing='$GRADIENT_CHECKPOINTING' \
@@ -78,6 +87,7 @@ apptainer exec --nv \
     --set training.save_total_limit=1 \
     --set evaluation.run_after_training='$EVALUATION_RUN_AFTER_TRAINING' \
     --set evaluation.max_validation_examples='$EVALUATION_MAX_VALIDATION_EXAMPLES' \
+    --set generation.max_new_tokens='$GENERATION_MAX_NEW_TOKENS' \
     --set generation.batch_size=4 \
     --set data.cache_dir=/work/hf_cache/mol_instructions \
     --set data.processed_dir=/work/results/data/mol_instructions_description_guided_short \

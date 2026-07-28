@@ -13,10 +13,22 @@ def _first_response_segment(text: str) -> str:
     if not text:
         return ""
     stripped = text.strip()
-    for marker in ("\n###", "\nInstruction:", "\nResponse:"):
+    for marker in ("\n###", "\nInstruction:", "\nResponse:", "<|im_end|>", "<|endoftext|>"):
         if marker in stripped:
             stripped = stripped.split(marker, 1)[0].strip()
     return stripped
+
+
+def _format_prompt(tokenizer: Any, instruction: str, prompt_template: str, use_chat_template: bool) -> str:
+    if not use_chat_template:
+        return format_generation_prompt(instruction, template=prompt_template)
+    if not getattr(tokenizer, "chat_template", None):
+        raise ValueError("use_chat_template=true requires a tokenizer with a chat_template.")
+    return tokenizer.apply_chat_template(
+        [{"role": "user", "content": instruction.strip()}],
+        tokenize=False,
+        add_generation_prompt=True,
+    )
 
 
 def generate_for_rows(
@@ -32,6 +44,7 @@ def generate_for_rows(
     do_sample: bool,
     seed: int,
     prompt_template: str,
+    use_chat_template: bool = False,
 ) -> list[dict[str, Any]]:
     """Generate raw and decoded SMILES strings for evaluation rows."""
     try:
@@ -42,7 +55,7 @@ def generate_for_rows(
     set_global_seed(seed)
     tokenizer.padding_side = "left"
     device = next(model.parameters()).device
-    prompts = [format_generation_prompt(str(row["instruction"]), template=prompt_template) for row in rows]
+    prompts = [_format_prompt(tokenizer, str(row["instruction"]), prompt_template, use_chat_template) for row in rows]
     records: list[dict[str, Any]] = []
     model.eval()
     with torch.no_grad():
