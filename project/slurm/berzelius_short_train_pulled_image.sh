@@ -24,6 +24,7 @@ PACKING_STRATEGY="${PACKING_STRATEGY:-bfd_split}"
 PADDING_FREE="${PADDING_FREE:-false}"
 LOSS_TYPE="${LOSS_TYPE:-nll}"
 MAX_LENGTH="${MAX_LENGTH:-512}"
+LOAD_BEST_MODEL_AT_END="${LOAD_BEST_MODEL_AT_END:-true}"
 CANONICALIZE_SMILES="${CANONICALIZE_SMILES:-false}"
 EVALUATION_RUN_AFTER_TRAINING="${EVALUATION_RUN_AFTER_TRAINING:-false}"
 EVALUATION_SPLIT="${EVALUATION_SPLIT:-validation}"
@@ -92,6 +93,7 @@ apptainer exec --nv \
     --set training.padding_free='$PADDING_FREE' \
     --set training.loss_type='$LOSS_TYPE' \
     --set training.max_length='$MAX_LENGTH' \
+    --set training.load_best_model_at_end='$LOAD_BEST_MODEL_AT_END' \
     --set training.output_root=/work/results/short_runs \
     --set training.save_total_limit=1 \
     --set evaluation.run_after_training='$EVALUATION_RUN_AFTER_TRAINING' \
