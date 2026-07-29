@@ -33,6 +33,8 @@ GENERATION_MAX_NEW_TOKENS="${GENERATION_MAX_NEW_TOKENS:-160}"
 SFT_FORMAT="${SFT_FORMAT:-text}"
 USE_CHAT_TEMPLATE="${USE_CHAT_TEMPLATE:-false}"
 DATA_MAX_SAMPLES="${DATA_MAX_SAMPLES:-1024}"
+DATA_CACHE_DIR="${DATA_CACHE_DIR:-/work/hf_cache/mol_instructions_${SLURM_JOB_ID:-manual}}"
+PROCESSED_DATA_DIR="${PROCESSED_DATA_DIR:-/work/results/data/mol_instructions_description_guided_${SLURM_JOB_ID:-manual}}"
 
 mkdir -p \
   "$PROJECT_BASE/hf_cache" \
@@ -68,11 +70,11 @@ apptainer exec --nv \
     --config '$CONFIG_PATH' \
     --set data.max_samples='$DATA_MAX_SAMPLES' \
     --set data.canonicalize_smiles='$CANONICALIZE_SMILES' \
-    --set data.cache_dir=/work/hf_cache/mol_instructions \
-    --set data.processed_dir=/work/results/data/mol_instructions_description_guided_short \
-    --set data.train_path=/work/results/data/mol_instructions_description_guided_short/train.csv \
-    --set data.validation_path=/work/results/data/mol_instructions_description_guided_short/validation.csv \
-    --set data.test_path=/work/results/data/mol_instructions_description_guided_short/test.csv"
+    --set data.cache_dir='$DATA_CACHE_DIR' \
+    --set data.processed_dir='$PROCESSED_DATA_DIR' \
+    --set data.train_path='$PROCESSED_DATA_DIR/train.csv' \
+    --set data.validation_path='$PROCESSED_DATA_DIR/validation.csv' \
+    --set data.test_path='$PROCESSED_DATA_DIR/test.csv'"
 
 apptainer exec --nv \
   --bind "$PROJECT_BASE:/work" \
@@ -101,11 +103,11 @@ apptainer exec --nv \
     --set evaluation.max_validation_examples='$EVALUATION_MAX_VALIDATION_EXAMPLES' \
     --set generation.max_new_tokens='$GENERATION_MAX_NEW_TOKENS' \
     --set generation.batch_size=4 \
-    --set data.cache_dir=/work/hf_cache/mol_instructions \
-    --set data.processed_dir=/work/results/data/mol_instructions_description_guided_short \
-    --set data.train_path=/work/results/data/mol_instructions_description_guided_short/train.csv \
-    --set data.validation_path=/work/results/data/mol_instructions_description_guided_short/validation.csv \
-    --set data.test_path=/work/results/data/mol_instructions_description_guided_short/test.csv \
+    --set data.cache_dir='$DATA_CACHE_DIR' \
+    --set data.processed_dir='$PROCESSED_DATA_DIR' \
+    --set data.train_path='$PROCESSED_DATA_DIR/train.csv' \
+    --set data.validation_path='$PROCESSED_DATA_DIR/validation.csv' \
+    --set data.test_path='$PROCESSED_DATA_DIR/test.csv' \
     --set logging.disable_wandb=true"
 
 echo "GPU usage log: $GPU_LOG"
