@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 """Print a compact table of training and generation metrics for run directories."""
 
-from __future__ import annotations
-
 import argparse
 import json
 from pathlib import Path
-from typing import Any
 
 try:
     import yaml
@@ -14,14 +11,14 @@ except ImportError:  # pragma: no cover - used only in minimal environments.
     yaml = None
 
 
-def _read_json(path: Path) -> dict[str, Any]:
+def _read_json(path):
     if not path.exists():
         return {}
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
 
 
-def _read_yaml(path: Path) -> dict[str, Any]:
+def _read_yaml(path):
     if not path.exists() or yaml is None:
         return {}
     with path.open("r", encoding="utf-8") as handle:
@@ -29,8 +26,8 @@ def _read_yaml(path: Path) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _get(mapping: dict[str, Any], dotted_key: str, default: Any = "") -> Any:
-    cursor: Any = mapping
+def _get(mapping, dotted_key, default=""):
+    cursor = mapping
     for key in dotted_key.split("."):
         if not isinstance(cursor, dict) or key not in cursor:
             return default
@@ -38,15 +35,15 @@ def _get(mapping: dict[str, Any], dotted_key: str, default: Any = "") -> Any:
     return cursor
 
 
-def _fmt(value: Any) -> str:
+def _fmt(value):
     if value is None:
         return ""
     if isinstance(value, float):
-        return f"{value:.4g}"
+        return "{:.4g}".format(value)
     return str(value)
 
 
-def _row(run_dir: Path) -> dict[str, Any]:
+def _row(run_dir):
     train = _read_json(run_dir / "train_metrics.json")
     validation = _read_json(run_dir / "evaluation" / "validation_metrics.json")
     config = _read_yaml(run_dir / "config.yaml")
@@ -72,7 +69,7 @@ def _row(run_dir: Path) -> dict[str, Any]:
     }
 
 
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "root",
