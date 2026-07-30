@@ -13,6 +13,7 @@ PROJECT_DIR="$REPO_DIR/project"
 IMAGE_PATH="$PROJECT_BASE/containers/pytorch-2.4.1-cuda12.4.sif"
 CONFIG_PATH="${CONFIG_PATH:-configs/default.yaml}"
 MODEL_ID="${MODEL_ID:-HuggingFaceTB/SmolLM-135M}"
+ATTN_IMPLEMENTATION="${ATTN_IMPLEMENTATION:-auto}"
 TOKENIZER_CONFIG="${TOKENIZER_CONFIG:-configs/tokenizers/atomwise.yaml}"
 PER_DEVICE_TRAIN_BATCH_SIZE="${PER_DEVICE_TRAIN_BATCH_SIZE:-4}"
 GRADIENT_ACCUMULATION_STEPS="${GRADIENT_ACCUMULATION_STEPS:-8}"
@@ -25,6 +26,7 @@ PADDING_FREE="${PADDING_FREE:-false}"
 LOSS_TYPE="${LOSS_TYPE:-nll}"
 MAX_LENGTH="${MAX_LENGTH:-512}"
 LOAD_BEST_MODEL_AT_END="${LOAD_BEST_MODEL_AT_END:-true}"
+SAVE_TOTAL_LIMIT="${SAVE_TOTAL_LIMIT:-2}"
 CANONICALIZE_SMILES="${CANONICALIZE_SMILES:-false}"
 EVALUATION_RUN_AFTER_TRAINING="${EVALUATION_RUN_AFTER_TRAINING:-false}"
 EVALUATION_SPLIT="${EVALUATION_SPLIT:-validation}"
@@ -83,6 +85,7 @@ apptainer exec --nv \
     --config '$CONFIG_PATH' \
     --tokenizer_config '$TOKENIZER_CONFIG' \
     --set model.model_id='$MODEL_ID' \
+    --set model.attn_implementation='$ATTN_IMPLEMENTATION' \
     --set data.sft_format='$SFT_FORMAT' \
     --set data.use_chat_template='$USE_CHAT_TEMPLATE' \
     --set training.max_steps='$MAX_STEPS' \
@@ -97,7 +100,7 @@ apptainer exec --nv \
     --set training.max_length='$MAX_LENGTH' \
     --set training.load_best_model_at_end='$LOAD_BEST_MODEL_AT_END' \
     --set training.output_root=/work/results/short_runs \
-    --set training.save_total_limit=1 \
+    --set training.save_total_limit='$SAVE_TOTAL_LIMIT' \
     --set evaluation.run_after_training='$EVALUATION_RUN_AFTER_TRAINING' \
     --set evaluation.split='$EVALUATION_SPLIT' \
     --set evaluation.max_validation_examples='$EVALUATION_MAX_VALIDATION_EXAMPLES' \
