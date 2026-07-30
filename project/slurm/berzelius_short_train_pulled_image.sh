@@ -18,6 +18,7 @@ TOKENIZER_CONFIG="${TOKENIZER_CONFIG:-configs/tokenizers/atomwise.yaml}"
 PER_DEVICE_TRAIN_BATCH_SIZE="${PER_DEVICE_TRAIN_BATCH_SIZE:-4}"
 GRADIENT_ACCUMULATION_STEPS="${GRADIENT_ACCUMULATION_STEPS:-8}"
 GRADIENT_CHECKPOINTING="${GRADIENT_CHECKPOINTING:-true}"
+GROUP_BY_LENGTH="${GROUP_BY_LENGTH:-false}"
 MAX_STEPS="${MAX_STEPS:-50}"
 LEARNING_RATE="${LEARNING_RATE:-0.00002}"
 PACKING="${PACKING:-false}"
@@ -93,6 +94,7 @@ apptainer exec --nv \
     --set training.per_device_train_batch_size='$PER_DEVICE_TRAIN_BATCH_SIZE' \
     --set training.gradient_accumulation_steps='$GRADIENT_ACCUMULATION_STEPS' \
     --set training.gradient_checkpointing='$GRADIENT_CHECKPOINTING' \
+    --set training.group_by_length='$GROUP_BY_LENGTH' \
     --set training.packing='$PACKING' \
     --set training.packing_strategy='$PACKING_STRATEGY' \
     --set training.padding_free='$PADDING_FREE' \

@@ -156,6 +156,7 @@ def _make_sft_config(SFTConfig: Any, run_dir: Path, config: dict[str, Any], repo
         "gradient_checkpointing": training.get("gradient_checkpointing", True),
         "dataloader_num_workers": training.get("dataloader_num_workers", 0),
         "max_grad_norm": training.get("max_grad_norm", 1.0),
+        "group_by_length": training.get("group_by_length", False),
     }
     for optional_key in ("loss_type", "packing_strategy", "padding_free", "eval_packing", "truncation_mode"):
         if optional_key in training:
