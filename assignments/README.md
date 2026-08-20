@@ -20,6 +20,12 @@ assignments/results/
 
 These notebooks are meant to be run from the repository root.
 
+## Disclosure
+
+I used coding agents, especially Codex, while working on these assignments. I reviewed the generated code, notebooks, commands, and results myself, and I take responsibility for the submitted work.
+
+I did not request or receive course feedback on the assignments during the course.
+
 ## Environment
 
 Use the same environment as the main project if convenient:
